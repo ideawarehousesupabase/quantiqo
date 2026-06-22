@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Atom, ArrowRight } from "lucide-react";
+import { Atom, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { login } from "@/lib/auth";
 import { toast } from "sonner";
 
@@ -40,19 +40,19 @@ function LoginPage() {
             type="email"
             required
             autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="auth-input"
           />
         </Field>
         <Field label="Password">
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="auth-input"
+            autoComplete="current-password"
           />
         </Field>
         <button
@@ -120,6 +120,30 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           border-color: var(--primary);
           box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
         }
+        .password-wrapper {
+          position: relative;
+        }
+        .password-wrapper .auth-input {
+          padding-right: 2.75rem;
+        }
+        .password-toggle {
+          position: absolute;
+          right: 0.625rem;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: var(--muted-foreground);
+          cursor: pointer;
+          padding: 0.25rem;
+          display: grid;
+          place-items: center;
+          border-radius: 0.25rem;
+          transition: color .15s;
+        }
+        .password-toggle:hover {
+          color: var(--foreground);
+        }
       `}</style>
     </div>
   );
@@ -131,5 +155,45 @@ export function Field({ label, children }: { label: string; children: React.Reac
       <div className="text-xs font-medium text-foreground mb-1.5">{label}</div>
       {children}
     </label>
+  );
+}
+
+export function PasswordInput({
+  value,
+  onChange,
+  autoComplete,
+  placeholder,
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  autoComplete?: string;
+  placeholder?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="password-wrapper">
+      <input
+        type={visible ? "text" : "password"}
+        required
+        autoComplete={autoComplete}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="auth-input"
+      />
+      <button
+        type="button"
+        className="password-toggle"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        tabIndex={-1}
+      >
+        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
   );
 }

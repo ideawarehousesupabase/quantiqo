@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, setDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, setDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 // Simple localStorage-based auth (prototype only)
@@ -36,7 +36,7 @@ export async function register(input: Omit<User, "id">): Promise<{ ok: true; use
       return { ok: false, error: "An account with this email already exists." };
     }
     
-    const user: User = { ...input, id: crypto.randomUUID() };
+    const user: User = { ...input, email: input.email.trim().toLowerCase(), id: crypto.randomUUID() };
     await setDoc(doc(db, "users", user.id), user);
     
     // Also save to localStorage to maintain local session continuity for prototype
@@ -88,4 +88,32 @@ export function currentUser(): User | null {
 export function isAuthenticated(): boolean {
   if (typeof window === "undefined") return false;
   return !!localStorage.getItem(SESSION_KEY);
+}
+
+export async function changePassword(newPassword: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    if (newPassword.length < 6) {
+      return { ok: false, error: "Password must be at least 6 characters." };
+    }
+
+    const session = JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null");
+    if (!session?.id) {
+      return { ok: false, error: "You must be logged in to change your password." };
+    }
+
+    // Update in Firestore
+    const userDocRef = doc(db, "users", session.id);
+    await updateDoc(userDocRef, { password: newPassword });
+
+    // Update in localStorage
+    const users = readUsers();
+    const updatedUsers = users.map((u) =>
+      u.id === session.id ? { ...u, password: newPassword } : u
+    );
+    writeUsers(updatedUsers);
+
+    return { ok: true };
+  } catch (error: any) {
+    return { ok: false, error: error.message || "Failed to change password." };
+  }
 }

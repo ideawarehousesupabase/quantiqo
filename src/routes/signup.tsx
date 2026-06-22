@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { register } from "@/lib/auth";
 import { toast } from "sonner";
-import { AuthLayout, Field } from "./login";
+import { AuthLayout, Field, PasswordInput } from "./login";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Create account — Quantum Settlement" }] }),
@@ -55,15 +55,15 @@ function SignupPage() {
           <input required value={form.fullName} onChange={set("fullName")} className="auth-input" />
         </Field>
         <Field label="Email">
-          <input type="email" required value={form.email} onChange={set("email")} className="auth-input" />
+          <input type="email" required value={form.email} onChange={set("email")} className="auth-input" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
         </Field>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Password">
-            <input type="password" required value={form.password} onChange={set("password")} className="auth-input" />
+            <PasswordInput value={form.password} onChange={set("password")} autoComplete="new-password" />
             <div className="text-xs text-muted-foreground mt-1.5">6 characters minimum</div>
           </Field>
           <Field label="Confirm Password">
-            <input type="password" required value={form.confirm} onChange={set("confirm")} className="auth-input" />
+            <PasswordInput value={form.confirm} onChange={set("confirm")} autoComplete="new-password" />
           </Field>
         </div>
 

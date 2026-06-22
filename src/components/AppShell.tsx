@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderKanban, ShieldCheck, CheckCircle2,
   Wallet, AlertTriangle, Activity, FileCheck2, ScrollText, BarChart3,
-  LogOut, Menu, X, Atom, Sun, Moon,
+  LogOut, Menu, X, Atom, Sun, Moon, KeyRound, Eye, EyeOff,
 } from "lucide-react";
-import { logout } from "@/lib/auth";
+import { logout, changePassword } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const nav = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -23,12 +24,194 @@ const nav = [
   { to: "/app/reports", label: "Reports", icon: BarChart3 },
 ] as const;
 
+function ChangePasswordModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (!open) {
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowNew(false);
+      setShowConfirm(false);
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    const res = await changePassword(newPassword);
+    setLoading(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success("Password changed successfully.");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md mx-4 bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-md bg-primary/15 text-primary grid place-items-center">
+              <KeyRound className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold tracking-tight">Change Password</h2>
+              <p className="text-xs text-muted-foreground">Enter your new password</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="h-8 w-8 grid place-items-center rounded-md hover:bg-accent transition text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <form onSubmit={onSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-foreground mb-1.5">New Password</label>
+            <div className="cp-password-wrapper">
+              <input
+                type={showNew ? "text" : "password"}
+                required
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                className="cp-input"
+              />
+              <button
+                type="button"
+                className="cp-toggle"
+                onClick={() => setShowNew((v) => !v)}
+                aria-label={showNew ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-foreground mb-1.5">Confirm New Password</label>
+            <div className="cp-password-wrapper">
+              <input
+                type={showConfirm ? "text" : "password"}
+                required
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter your password"
+                className="cp-input"
+              />
+              <button
+                type="button"
+                className="cp-toggle"
+                onClick={() => setShowConfirm((v) => !v)}
+                aria-label={showConfirm ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-md border border-border text-sm font-medium hover:bg-accent transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition shadow-glow disabled:opacity-60"
+            >
+              {loading ? "Updating..." : "Update Password"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <style>{`
+        .cp-input {
+          width: 100%;
+          background: var(--input);
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          padding: 0.625rem 0.875rem;
+          padding-right: 2.75rem;
+          font-size: 0.875rem;
+          color: var(--foreground);
+          outline: none;
+          transition: border-color .15s, box-shadow .15s;
+        }
+        .cp-input:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+        }
+        .cp-password-wrapper {
+          position: relative;
+        }
+        .cp-toggle {
+          position: absolute;
+          right: 0.625rem;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: var(--muted-foreground);
+          cursor: pointer;
+          padding: 0.25rem;
+          display: grid;
+          place-items: center;
+          border-radius: 0.25rem;
+          transition: color .15s;
+        }
+        .cp-toggle:hover {
+          color: var(--foreground);
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     const stored = (localStorage.getItem("qs.theme") as "dark" | "light" | null) ?? "dark";
@@ -82,7 +265,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border p-3 space-y-0.5">
+        <button
+          onClick={() => {
+            setMobileOpen(false);
+            setChangePasswordOpen(true);
+          }}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+        >
+          <KeyRound className="h-4 w-4" />
+          Change Password
+        </button>
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
@@ -141,6 +334,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="p-4 lg:p-8 max-w-[1600px] mx-auto w-full">{children}</div>
         </main>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal open={changePasswordOpen} onClose={() => setChangePasswordOpen(false)} />
     </div>
   );
 }
