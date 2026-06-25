@@ -38,7 +38,7 @@ function SignupPage() {
     setLoading(false);
     if (!res.ok) return toast.error(res.error);
     toast.success("Your registration request has been submitted successfully. Please wait for administrator approval before logging in.");
-    navigate({ to: "/app/dashboard" });
+    navigate({ to: "/login" });
   };
 
   return (
