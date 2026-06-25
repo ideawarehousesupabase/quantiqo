@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AppWorkforceRouteImport } from './routes/app.workforce'
 import { Route as AppTasksRouteImport } from './routes/app.tasks'
 import { Route as AppSettlementsRouteImport } from './routes/app.settlements'
@@ -25,6 +26,7 @@ import { Route as AppGovernanceRouteImport } from './routes/app.governance'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppComplianceRouteImport } from './routes/app.compliance'
 import { Route as AppAuditRouteImport } from './routes/app.audit'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AppProjectsIdRouteImport } from './routes/app.projects.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -51,6 +53,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppWorkforceRoute = AppWorkforceRouteImport.update({
   id: '/workforce',
@@ -107,6 +114,11 @@ const AppAuditRoute = AppAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppProjectsIdRoute = AppProjectsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -118,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/app/audit': typeof AppAuditRoute
   '/app/compliance': typeof AppComplianceRoute
   '/app/dashboard': typeof AppDashboardRoute
@@ -129,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/app/settlements': typeof AppSettlementsRoute
   '/app/tasks': typeof AppTasksRoute
   '/app/workforce': typeof AppWorkforceRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/projects/$id': typeof AppProjectsIdRoute
 }
@@ -136,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/app/audit': typeof AppAuditRoute
   '/app/compliance': typeof AppComplianceRoute
   '/app/dashboard': typeof AppDashboardRoute
@@ -147,6 +162,7 @@ export interface FileRoutesByTo {
   '/app/settlements': typeof AppSettlementsRoute
   '/app/tasks': typeof AppTasksRoute
   '/app/workforce': typeof AppWorkforceRoute
+  '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/app/projects/$id': typeof AppProjectsIdRoute
 }
@@ -156,6 +172,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/app/audit': typeof AppAuditRoute
   '/app/compliance': typeof AppComplianceRoute
   '/app/dashboard': typeof AppDashboardRoute
@@ -167,6 +184,7 @@ export interface FileRoutesById {
   '/app/settlements': typeof AppSettlementsRoute
   '/app/tasks': typeof AppTasksRoute
   '/app/workforce': typeof AppWorkforceRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/projects/$id': typeof AppProjectsIdRoute
 }
@@ -177,6 +195,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/admin/dashboard'
     | '/app/audit'
     | '/app/compliance'
     | '/app/dashboard'
@@ -188,6 +207,7 @@ export interface FileRouteTypes {
     | '/app/settlements'
     | '/app/tasks'
     | '/app/workforce'
+    | '/admin/'
     | '/app/'
     | '/app/projects/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -195,6 +215,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/admin/dashboard'
     | '/app/audit'
     | '/app/compliance'
     | '/app/dashboard'
@@ -206,6 +227,7 @@ export interface FileRouteTypes {
     | '/app/settlements'
     | '/app/tasks'
     | '/app/workforce'
+    | '/admin'
     | '/app'
     | '/app/projects/$id'
   id:
@@ -214,6 +236,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/admin/dashboard'
     | '/app/audit'
     | '/app/compliance'
     | '/app/dashboard'
@@ -225,6 +248,7 @@ export interface FileRouteTypes {
     | '/app/settlements'
     | '/app/tasks'
     | '/app/workforce'
+    | '/admin/'
     | '/app/'
     | '/app/projects/$id'
   fileRoutesById: FileRoutesById
@@ -234,6 +258,8 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +298,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/app/workforce': {
       id: '/app/workforce'
@@ -350,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAuditRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/projects/$id': {
       id: '/app/projects/$id'
       path: '/$id'
@@ -409,6 +449,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

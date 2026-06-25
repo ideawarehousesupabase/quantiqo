@@ -8,6 +8,7 @@ export interface User {
   fullName: string;
   email: string;
   password: string;
+  status?: "Pending" | "Approved" | "Rejected";
 }
 
 const USERS_KEY = "qs.users";
@@ -36,7 +37,7 @@ export async function register(input: Omit<User, "id">): Promise<{ ok: true; use
       return { ok: false, error: "An account with this email already exists." };
     }
     
-    const user: User = { ...input, email: input.email.trim().toLowerCase(), id: crypto.randomUUID() };
+    const user: User = { ...input, email: input.email.trim().toLowerCase(), id: crypto.randomUUID(), status: "Pending" };
     await setDoc(doc(db, "users", user.id), user);
     
     // Also save to localStorage to maintain local session continuity for prototype
@@ -60,6 +61,13 @@ export async function login(email: string, password: string): Promise<{ ok: true
     }
     
     const user = querySnapshot.docs[0].data() as User;
+    if (user.status === "Pending") {
+      return { ok: false, error: "Your account is awaiting administrator approval." };
+    }
+    if (user.status === "Rejected") {
+      return { ok: false, error: "Your registration request has been rejected." };
+    }
+    
     localStorage.setItem(SESSION_KEY, JSON.stringify({ id: user.id, email: user.email }));
     window.dispatchEvent(new Event("qs-auth-change"));
     return { ok: true, user };
@@ -116,4 +124,31 @@ export async function changePassword(newPassword: string): Promise<{ ok: true } 
   } catch (error: any) {
     return { ok: false, error: error.message || "Failed to change password." };
   }
+}
+
+export async function adminLogin(email: string, password: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const adminsRef = collection(db, "admins");
+    const q = query(adminsRef, where("email", "==", email.toLowerCase()), where("password", "==", password));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return { ok: false, error: "Invalid administrator credentials." };
+    }
+    
+    localStorage.setItem("qs.admin_session", "true");
+    return { ok: true };
+  } catch (error: any) {
+    return { ok: false, error: error.message || "Failed to login as admin" };
+  }
+}
+
+export function isAdminAuthenticated(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem("qs.admin_session");
+}
+
+export function adminLogout() {
+  localStorage.removeItem("qs.admin_session");
+  window.dispatchEvent(new Event("qs-auth-change"));
 }
